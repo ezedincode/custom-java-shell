@@ -26,6 +26,9 @@ public class Main {
                 case "type":
                     type(command);
                     break;
+                case "pwd":
+                    pwd();
+                    break;
                 default:
                     execute(command);
                     break;
@@ -43,7 +46,7 @@ public class Main {
     }
 
     public static void type(String[] input) {
-        String[] validCommands = {"echo", "type", "exit"};
+        String[] validCommands = {"echo", "type", "exit","pwd"};
 
         if (search(validCommands, input[1])) {
             System.out.println(input[1] + " is a shell builtin");
@@ -112,5 +115,8 @@ public class Main {
             }
         }
         p.destroy();
+    }
+    public static void pwd() {
+        System.out.println(System.getProperty("user.dir"));
     }
 }
