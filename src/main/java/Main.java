@@ -1,11 +1,11 @@
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class Main {
@@ -27,7 +27,7 @@ public class Main {
                     type(command);
                     break;
                 default:
-                    commandNotFound(command[0]);
+                    execute(command);
                     break;
             }
 
@@ -48,7 +48,8 @@ public class Main {
         if (search(validCommands, input[1])) {
             System.out.println(input[1] + " is a shell builtin");
         } else {
-            pathFinder(input[1]);
+            String result = pathFinder(input[1]);
+            System.out.println(result);
         }
     }
 
@@ -61,11 +62,11 @@ public class Main {
         return false;
     }
 
-    public static void pathFinder(String input) {
+    public static String pathFinder(String input) {
         String paths = System.getenv("PATH");
         if (paths == null) {
-            System.out.println(input + ": not found");
-            return;
+            return input + ": not found";
+
         }
 
         String[] pathArray = paths.split(File.pathSeparator);
@@ -86,10 +87,30 @@ public class Main {
                 .filter(path -> path.getFileName().toString().equals(input))
                 .findFirst();
 
-        if (result.isPresent()) {
-            System.out.println(input + " is " + result.get().toAbsolutePath());
-        } else {
-            System.out.println(input + ": not found");
+        return result.map(path -> path.toAbsolutePath().toString()).orElseGet(() -> input + ": not found");
+    }
+    //for executing executable file
+    public static void execute(String[] args) throws IOException {
+         String result = pathFinder(args[0]);
+         if(result.contains(": not found")) {
+             commandNotFound(args[0]);
+             return;
+         }
+        String[] temp = result.split("/");
+         String path = temp[temp.length - 1];
+        //combining executable path with the arguments
+        //        commands.add(path);
+        List<String> commands = new ArrayList<>(Arrays.asList(args));
+
+        ProcessBuilder pb = new ProcessBuilder(commands);
+        pb.redirectErrorStream(true);
+        Process p =pb.start();
+        try(BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
         }
+        p.destroy();
     }
 }
