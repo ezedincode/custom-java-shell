@@ -49,7 +49,7 @@ public class Main {
     }
 
     public static void type(String[] input) {
-        String[] validCommands = {"echo", "type", "exit","pwd","cd"};
+        String[] validCommands = {"echo", "type", "exit", "pwd", "cd"};
 
         if (search(validCommands, input[1])) {
             System.out.println(input[1] + " is a shell builtin");
@@ -95,23 +95,24 @@ public class Main {
 
         return result.map(path -> path.toAbsolutePath().toString()).orElseGet(() -> input + ": not found");
     }
+
     //for executing executable file
     public static void execute(String[] args) throws IOException {
-         String result = pathFinder(args[0]);
-         if(result.contains(": not found")) {
-             commandNotFound(args[0]);
-             return;
-         }
+        String result = pathFinder(args[0]);
+        if (result.contains(": not found")) {
+            commandNotFound(args[0]);
+            return;
+        }
         String[] temp = result.split("/");
-         String path = temp[temp.length - 1];
+        String path = temp[temp.length - 1];
         //combining executable path with the arguments
         //        commands.add(path);
         List<String> commands = new ArrayList<>(Arrays.asList(args));
 
         ProcessBuilder pb = new ProcessBuilder(commands);
         pb.redirectErrorStream(true);
-        Process p =pb.start();
-        try(BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+        Process p = pb.start();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
             String line;
             while ((line = br.readLine()) != null) {
                 System.out.println(line);
@@ -119,18 +120,72 @@ public class Main {
         }
         p.destroy();
     }
+
     public static void pwd() {
         System.out.println(System.getProperty("user.dir"));
     }
-    public static void cd(String[] input) {
+
+    public static void cd(String[] input) throws IOException {
         String path = input[1];
-        File file = new File(path);
-        if(file.exists()){
-            System.setProperty("user.dir", file.getAbsolutePath());
+        if (input[1].equals("./")) {
+            return;
+
         }
-        else{
-            System.out.println("cd: "+path + ": No such file or directory");
+        if (input[1].startsWith("../")) {
+            String[] commands = input[1].split("/");
+            boolean containIllegalCommand = false;
+            for (String command : commands) {
+                containIllegalCommand = !command.equals("..");
+                if (containIllegalCommand) {
+                    break;
+
+                }
+
+            }
+            if (!containIllegalCommand) {
+                File currentDir = new File(System.getProperty("user.dir"));
+                for (String command : commands) {
+                    if (command.equals("..") && currentDir.getParentFile() != null) {
+                        currentDir = currentDir.getParentFile();
+                    }
+                }
+                System.setProperty("user.dir", currentDir.getCanonicalPath());
+                return;
+            } else {
+                path = input[1].substring(2);
+            }
+
+
+
+
+        }
+       String completePath = System.getProperty("user.dir");
+       // File file;
+//        if(path.charAt(0)=='/'){
+//             file = new File(path);
+//        }
+//        else{
+//            file = new File(completePath.concat("\\").concat(path));
+//        }
+//
+//        if (file.exists()) {
+//            System.setProperty("user.dir", file.getAbsolutePath());
+//        } else {
+//            System.out.println("cd: " + path + ": No such file or directory");
+//        }
+        File dir;
+        if(path.startsWith("./")){
+            path = path.substring(2);
+            dir = new File(System.getProperty("user.dir"),path);
+        }else{
+            dir = new File(path);
         }
 
+        if (!dir.exists() || !dir.isDirectory()) {
+            System.out.println("cd: " + path + ": No such file or directory");
+            return;
+        }
+        //i use getCanonicalPath() instead of getAbsolutePath() to handle paths start with ./
+        System.setProperty("user.dir", dir.getCanonicalPath());
     }
 }
