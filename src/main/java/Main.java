@@ -29,6 +29,9 @@ public class Main {
                 case "pwd":
                     pwd();
                     break;
+                case "cd":
+                    cd(command);
+                    break;
                 default:
                     execute(command);
                     break;
@@ -46,7 +49,7 @@ public class Main {
     }
 
     public static void type(String[] input) {
-        String[] validCommands = {"echo", "type", "exit","pwd"};
+        String[] validCommands = {"echo", "type", "exit","pwd","cd"};
 
         if (search(validCommands, input[1])) {
             System.out.println(input[1] + " is a shell builtin");
@@ -118,5 +121,16 @@ public class Main {
     }
     public static void pwd() {
         System.out.println(System.getProperty("user.dir"));
+    }
+    public static void cd(String[] input) {
+        String path = input[1];
+        File file = new File(path);
+        if(file.exists()){
+            System.setProperty("user.dir", file.getAbsolutePath());
+        }
+        else{
+            System.out.println("cd: "+path + ": No such file or directory");
+        }
+
     }
 }
