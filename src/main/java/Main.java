@@ -160,19 +160,7 @@ public class Main {
 
         }
        String completePath = System.getProperty("user.dir");
-       // File file;
-//        if(path.charAt(0)=='/'){
-//             file = new File(path);
-//        }
-//        else{
-//            file = new File(completePath.concat("\\").concat(path));
-//        }
-//
-//        if (file.exists()) {
-//            System.setProperty("user.dir", file.getAbsolutePath());
-//        } else {
-//            System.out.println("cd: " + path + ": No such file or directory");
-//        }
+
         File dir;
         if(path.startsWith("./")){
             path = path.substring(2);
