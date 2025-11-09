@@ -126,6 +126,16 @@ public class Main {
     }
 
     public static void cd(String[] input) throws IOException {
+        if(input[1].equals("~")){
+            File homePath = new File(System.getenv("HOME"));
+            if(homePath == null){
+                homePath = new File(System.getProperty("user.home"));
+            }
+            System.setProperty("user.dir", homePath.getCanonicalPath());
+            return;
+        }
+
+
         String path = input[1];
         if (input[1].equals("./")) {
             return;
@@ -165,8 +175,13 @@ public class Main {
         if(path.startsWith("./")){
             path = path.substring(2);
             dir = new File(System.getProperty("user.dir"),path);
-        }else{
+        } else if (path.startsWith("/")) {
             dir = new File(path);
+            if(!dir.isAbsolute()){
+                dir = new File(System.getProperty("user.dir"),path);
+            }
+        } else{
+            dir = new File(System.getProperty("user.dir"),path);
         }
 
         if (!dir.exists() || !dir.isDirectory()) {
