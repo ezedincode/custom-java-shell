@@ -127,7 +127,9 @@ public class Main {
 
     public static void cd(String[] input) throws IOException {
         if(input[1].equals("~")){
+            //for unix
             File homePath = new File(System.getenv("HOME"));
+            //window use System.getProperty("user.home")
             if(homePath == null){
                 homePath = new File(System.getProperty("user.home"));
             }
@@ -177,6 +179,8 @@ public class Main {
             dir = new File(System.getProperty("user.dir"),path);
         } else if (path.startsWith("/")) {
             dir = new File(path);
+            //for window os
+            //because window take /path/path as a relative paths
             if(!dir.isAbsolute()){
                 dir = new File(System.getProperty("user.dir"),path);
             }
