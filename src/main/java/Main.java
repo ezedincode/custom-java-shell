@@ -45,12 +45,19 @@ public class Main {
     }
 
     public static void echo(String input) {
-        System.out.println(input.substring(5));
+        String [] parts = input.trim().split("\\s+");
+        String finalPart="";
+        for (String part : parts) {
+            finalPart= finalPart.concat(part).concat(" ");
+        }
+
+        System.out.println(finalPart.trim().substring(5));
     }
 
     public static void type(String[] input) {
         String[] validCommands = {"echo", "type", "exit", "pwd", "cd"};
 
+        
         if (search(validCommands, input[1])) {
             System.out.println(input[1] + " is a shell builtin");
         } else {
@@ -128,20 +135,20 @@ public class Main {
     public static void cd(String[] input) throws IOException {
         if(input[1].equals("~")){
             //for unix
-            File homePath = new File(System.getenv("HOME"));
-            //window use System.getProperty("user.home")
-            if(homePath == null){
+            File homePath;
+            try {
+                 homePath = new File(System.getenv("HOME"));
+            }catch (Exception e){
                 homePath = new File(System.getProperty("user.home"));
             }
+            System.out.println(homePath);
+            //window use System.getProperty("user.home")
             System.setProperty("user.dir", homePath.getCanonicalPath());
             return;
         }
-
-
         String path = input[1];
         if (input[1].equals("./")) {
             return;
-
         }
         if (input[1].startsWith("../")) {
             String[] commands = input[1].split("/");
