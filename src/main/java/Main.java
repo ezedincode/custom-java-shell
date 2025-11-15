@@ -33,7 +33,7 @@ public class Main {
                     cd(command);
                     break;
                 default:
-                    execute(command);
+                    execute(input);
                     break;
             }
 
@@ -44,15 +44,89 @@ public class Main {
         System.out.println(command + ": command not found");
     }
 
-    public static void echo(String input) {
-        String [] parts = input.trim().split("\\s+");
-        String finalPart="";
-        for (String part : parts) {
-            finalPart= finalPart.concat(part).concat(" ");
+//    public static void echo(String input) {
+//        String [] parts;
+//        String[] loopParts;
+//        int i=1;
+//        input = input.substring(5);
+//        String finalPart="";
+//        if(input.contains("'")){
+//            parts = input.trim().split("'");
+//            for (String part : parts) {
+//                if(i % 2 != 0) {
+//                    if(part.isEmpty()){
+//                        continue;
+//                    }
+//                    else {
+//                        boolean space = part.charAt(0) == ' ';
+//                        System.out.println(space);
+//                        loopParts = part.trim().split("\\s+");
+//                        System.out.println(Arrays.toString(loopParts));
+//                        if (loopParts.length > 1) {
+//                            for (String loopPart : loopParts) {
+//                                if (space) {
+//                                    finalPart = finalPart.concat(" ");
+//                                    space = false;
+//                                }
+//                                finalPart = finalPart.concat(loopPart).concat(" ");
+//                            }
+//                            finalPart = finalPart.trim();
+//                        }else{
+//                            finalPart = finalPart.concat(part);
+//                        }
+//
+//                    }
+//                }else{
+//                    finalPart =finalPart.concat(part);
+//                }
+//                i++;
+//            }
+//        }else {
+//            parts = input.trim().split("\\s+");
+//            for (String part : parts) {
+//                finalPart = finalPart.concat(part).concat(" ");
+//            }
+//            finalPart = finalPart.trim();
+//        }
+//
+//        System.out.println(finalPart.trim());
+//    }
+public static void echo(String input) {
+
+    input = input.substring(5); // remove "echo "
+
+    StringBuilder out = new StringBuilder();
+    boolean inQuotes = false;
+    boolean lastWasSpace = false;
+
+    for (int c = 0; c < input.length(); c++) {
+        char ch = input.charAt(c);
+
+        if (ch == '\'') {
+            inQuotes = !inQuotes;
+            continue; // remove quotes
         }
 
-        System.out.println(finalPart.trim().substring(5));
+        if (Character.isWhitespace(ch)) {
+            if (inQuotes) {
+                // inside quotes → keep spaces exactly
+                out.append(ch);
+            } else {
+                // outside quotes → compress to single space
+                if (!lastWasSpace) {
+                    out.append(' ');
+                }
+            }
+            lastWasSpace = true;
+        } else {
+            out.append(ch);
+            lastWasSpace = false;
+        }
     }
+
+    System.out.println(out.toString().trim());
+}
+
 
     public static void type(String[] input) {
         String[] validCommands = {"echo", "type", "exit", "pwd", "cd"};
@@ -104,19 +178,21 @@ public class Main {
     }
 
     //for executing executable file
-    public static void execute(String[] args) throws IOException {
-        String result = pathFinder(args[0]);
-        if (result.contains(": not found")) {
-            commandNotFound(args[0]);
+    public static void execute(String args) throws IOException {
+        String [] result = args.split(" ");
+        String results = pathFinder(result[0]);
+        if (results.contains(": not found")) {
+            commandNotFound(result[0]);
             return;
         }
-        String[] temp = result.split("/");
-        String path = temp[temp.length - 1];
+        List<String> argResult = parseCommand(args);
+//        String[] temp = result.split("/");
+//        String path = temp[temp.length - 1];
         //combining executable path with the arguments
         //        commands.add(path);
-        List<String> commands = new ArrayList<>(Arrays.asList(args));
+//        List<String> commands = new ArrayList<>(Arrays.asList(args));
 
-        ProcessBuilder pb = new ProcessBuilder(commands);
+        ProcessBuilder pb = new ProcessBuilder(argResult);
         pb.redirectErrorStream(true);
         Process p = pb.start();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
@@ -141,7 +217,7 @@ public class Main {
             }catch (Exception e){
                 homePath = new File(System.getProperty("user.home"));
             }
-            System.out.println(homePath);
+            ;
             //window use System.getProperty("user.home")
             System.setProperty("user.dir", homePath.getCanonicalPath());
             return;
@@ -202,4 +278,35 @@ public class Main {
         //i use getCanonicalPath() instead of getAbsolutePath() to handle paths start with ./
         System.setProperty("user.dir", dir.getCanonicalPath());
     }
+    public static List<String> parseCommand(String line) {
+        List<String> args = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (int i = 0; i < line.length(); i++) {
+            char ch = line.charAt(i);
+
+            if (ch == '\'') {
+                inQuotes = !inQuotes;
+                continue;
+            }
+
+            if (Character.isWhitespace(ch) && !inQuotes) {
+                if (!current.isEmpty()) {
+                    args.add(current.toString());
+                    current.setLength(0);
+                }
+            } else {
+                current.append(ch);
+            }
+        }
+
+        if (!current.isEmpty()) {
+            args.add(current.toString());
+        }
+
+        return args;
+    }
+
+
 }
